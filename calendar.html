@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Calendar</title>
+<style>
+body {
+	font-family: "Helvetica", sans-serif;
+		background-color: #EBEBEB;
+}
+h1 {
+	text-align: center;
+}
+.title a {
+	position: absolute;
+	text-indent: -9999px;
+	width: 0;
+	height: 0;
+	margin-top: 10px;
+}
+.title a.l {
+	left: 10px;
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-right: 15px solid black;
+}
+.title a.r {
+	right: 10px;
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 15px solid black;
+}
+#cal {
+	width: 100%;
+	font-size: 0.8em;
+	line-height: 1.25em;
+	border-collapse: collapse; 
+	border-spacing: 0;
+	display: table;
+}
+#cal tr {
+	display: table-row;
+}
+#cal th, #cal td {
+	display: table-cell !important; 
+	margin: 0; 
+	width: 14.2857%; 
+	padding: 0.4166em; 
+	border: 1px solid #ebebeb; 
+	vertical-align: top; 
+}
+#cal th {
+	font-weight: bold;
+	padding: 2px 0 2px 0;
+	text-align: center;
+}
+#cal .non {
+	background-color: #EBEBEB;
+}
+#cal td {
+	height: 5em;
+	background-color: white;
+}
+#cal .number {
+	display: block;
+	text-align: right;
+	padding: 2px 3px 0 0;
+}
+#cal .day a {
+	display: block;
+}
+#list {
+	display: none;
+}
+#list .date {
+	font-weight: bold;
+	margin-top: 1em;
+}
+@media only screen and (max-width : 640px) {
+	#cal th span, .title span {
+		display: none;
+	}
+}
+@media only screen and (max-width : 500px) {
+	#list {
+		display: block;
+	}
+	#cal {
+		display: none;
+	}
+}
+</style>
+</head>
+<body>
+<div id="calendar"></div>
+<div id="list"></div>
+<script>
+// EVENTS
+var json = {
+	'2013-12-5':[
+		{'title':'Friday Night Football','link':'http://nfl.com','notes':'Game on!'},
+		{'title':'Cat Herding Excersize','link':'#LOLcats','notes':''}
+	],
+	'2013-12-17':[{'title':'Scuba Diving','link':'http://scuba.com','notes':'$50'}],
+	'2014-1-5':[{'title':'Birthday Party','link':'#party','notes':'Bring presents!'}]
+};
+
+function makeCalendar(month,year,events) {
+	var week = ['Sun<span>day</span>','Mon<span>day</span>','Tue<span>sday</span>','Wed<span>nesday</span>','Thu<span>rsday</span>','Fri<span>day</span>','Sat<span>urday</span>'];
+	var months = ['Jan<span>uary</span>','Feb<span>ruary</span>','Mar<span>ch</span>','Apr<span>il</span>','May','Jun<span>e</span>','Jul<span>y</span>','Aug<span>ust</span>','Sep<span>tember</span>','Oct<span>ober</span>','Nov<span>ember</span>','Dec<span>ember</span>'];
+	
+	document.getElementById('calendar').innerHTML = '';
+	document.getElementById('list').innerHTML = '';
+	// Date Parsing
+	var first = new Date(year,(month-1),1);// First Day of the Month
+	var last = new Date(year,(month-1)+1,0);// Last Day of the Month
+	var startIndex = first.getDay();
+	var endIndex = last.getDay();
+	var days = last.getDate();
+	
+	// Title
+	var title = document.createElement('h1');
+	var ll = (month==1)?'12,'+(year-1):(month-1)+','+year;
+	ll = '<a href="javascript:makeCalendar('+ll+')" class="l"><</a>';
+	var rr = (month==12)?'1,'+(parseInt(year)+1):(parseInt(month)+1)+','+year;
+	rr = '<a href="javascript:makeCalendar('+rr+')" class="r">></a>';
+	title.className = 'title';
+	title.innerHTML = ll+months[month-1]+' '+year+rr;
+	document.getElementById('calendar').appendChild(title);
+	
+	// Table
+	var table = document.createElement('table');
+	table.id = 'cal';
+	document.getElementById('calendar').appendChild(table);
+	
+	// List
+	var list = document.getElementById('list');
+	function addListDate(a) {
+		var d = document.createElement('div');
+		d.className = 'date';
+		d.innerHTML = month+'/'+(a+1)+'/'+year;
+		list.appendChild(d);
+	}
+	function addList(a,b) {
+		var li = document.createElement('li');
+		var a = document.createElement('a');
+		a.href = b.link;
+		a.innerHTML = b.title;
+		li.appendChild(a);
+		list.appendChild(li)
+	}
+	
+	// Rows
+	var di = 0, row = document.createElement('tr');
+	table.appendChild(row);
+	
+	function rows() {
+		if (di==6){
+			di=0;
+			row = document.createElement('tr');
+			table.appendChild(row);
+		} else {
+			di++;
+		}
+	}
+	
+	// Day Headers
+	for (var i = 0; i < week.length; i++) {
+		var d = document.createElement('th');
+		d.innerHTML = week[i];
+		row.appendChild(d);
+		rows();
+	}
+	
+	// Blank Days
+	for (var i = 0; i < startIndex; i++) {
+		var d = document.createElement('td');
+		d.className = 'non day';
+		d.appendChild(document.createElement('p'));
+		row.appendChild(d);
+		rows();
+	}
+	
+	// Regular Days
+	for (var i = 0; i < days; i++) {
+		var d = document.createElement('td');
+		d.className = 'day';
+		var n = document.createElement('span');
+		n.innerHTML = (i+1);
+		n.className = 'number';
+		d.appendChild(n);
+		row.appendChild(d);
+		rows();
+		if (events) {
+			var ev = events[year+'-'+month+'-'+i];
+			if (ev){
+				addListDate(i);
+				for (var ii = 0; ii < ev.length; ii++) {
+					var a = document.createElement('a');
+					a.href = ev[ii].link;
+					a.title = ev[ii].notes;
+					a.innerHTML = ev[ii].title;
+					d.appendChild(a);
+					addList(i,ev[ii]);
+				}
+			}
+		}
+	}
+	
+	// Blank Days
+	for (var i = 0; i < (6-endIndex); i++) {
+		var d = document.createElement('td');
+		d.className = 'non day';
+		d.appendChild(document.createElement('p'));
+		row.appendChild(d);
+	}
+}
+
+// GET CURRENT MONTH, YEAR
+var t = new Date();
+var m = (t.getMonth()==0)?'1':(t.getMonth()+1);
+// MAKE CALENDAR
+makeCalendar(m, t.getFullYear(), json);// Month, Year, Event JSON
+</script>
+</body>
+</html>
